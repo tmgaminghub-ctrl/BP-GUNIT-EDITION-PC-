@@ -1,0 +1,26 @@
+Release package test — campaign player + PC display options
+
+ZIP built by rebuild/package.py from this staged kit with the test-data
+allowlist. Included: launcher (campaign.py, campaign_store.py, art, stub EXE),
+play.py, tools, bridge, toolkit, vendor, runtime, runtime source, rebuild
+scripts and guides. Excluded: disc image, saves/snapshots, Play-Data,
+engine-leaves.dll/.so, installed.txt and any generated game code.
+
+Checks on this build:
+  * clean extraction into a folder whose name contains a space and non-ASCII text
+  * tools/verify_files.py: every manifested file matches SHA256SUMS.txt
+  * tests/test_disc.py 8/8, tests/test_launcher.py 4/4, tests/test_campaign.py 11/11
+    (11 includes display normalisation, INI merge/idempotency, apply-to-settings,
+     launcher-to-player propagation, config migration from the older format)
+  * launcher opened from that extraction: DISPLAY row present and operative
+    (Window/Full screen, window size list, render scale 1x-5x, VSync), choices
+    written to Play-Data/campaign-launcher.json and passed to play.py with
+    --display-mode; values land in the private ppsspp.ini as FullScreen,
+    WindowWidth, WindowHeight, InternalResolution and VSyncInterval
+  * STUB EXE rebuilt with per-monitor-v2 DPI awareness; compiles clean with
+    MinGW-w64 and carries its icon/version resource
+  * game-side playtests (tutorial, Industrial District, late "Endgame" state)
+    were recorded in the previous build of this kit; the engine, runtime,
+    native module, disc checks and save formats are unchanged here, and the
+    display keys added are ordinary PPSSPP graphics settings that were present
+    and persisted in those runs

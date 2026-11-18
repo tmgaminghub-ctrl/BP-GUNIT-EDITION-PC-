@@ -1,0 +1,1 @@
+PASS: 11,680 entries; 84,768 instruction positions; 35,040 register/memory comparisons; no differences.

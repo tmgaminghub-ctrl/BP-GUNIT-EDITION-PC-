@@ -1,0 +1,12 @@
+{
+  "Windows/x86_64/lib/avcodec.lib": "f6fb3381c4eca8c8687abbabbfad853d3ae8baebc93ad0d9a4a449f507334beb",
+  "Windows/x86_64/lib/avformat.lib": "a256245bdbaa7702040ac80d8be2857969d070381b1fa54729fdb1324d9da76f",
+  "Windows/x86_64/lib/avutil.lib": "40224dec0dff22013c4126a9aaa0b9635838e58f02604a57d54ad04dccb65263",
+  "Windows/x86_64/lib/swresample.lib": "8f7e5aebd991435a6c8bdf33939eb43a114e2dea0e4287999b7c408096b11633",
+  "Windows/x86_64/lib/swscale.lib": "a8858aada87fbeb15240945842618d7a3641bd7849c1f72930d86f9061008df7",
+  "linux/x86_64/lib/libavcodec.a": "e777f2cc6a22ab42baee117534788b8695ab338c491436d4fa7f4ed033eddeb6",
+  "linux/x86_64/lib/libavformat.a": "8ab345bc56844c18f0348df80ce6fa00937f72a448d360d709f2073ce4f6435d",
+  "linux/x86_64/lib/libavutil.a": "8d03d54c0a280cdce177cbf76611a954f05beaab2b6e56389b0fa001d33ab331",
+  "linux/x86_64/lib/libswresample.a": "27342f68346ba4970f2fd68700a77c162a3746ea4248e1b0b7002b8ad60fb9e4",
+  "linux/x86_64/lib/libswscale.a": "1166cebff89cbe46196d5ab61a930c8e57be2ea9a9d2d34e16098c20c8dcd844"
+}

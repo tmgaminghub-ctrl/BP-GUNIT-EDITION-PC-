@@ -1,0 +1,13 @@
+test_compressed_raw_and_padded (__main__.Tests.test_compressed_raw_and_padded) ... ok
+test_entry_limits (__main__.Tests.test_entry_limits) ... ok
+test_hi16_carry (__main__.Tests.test_hi16_carry) ... ok
+test_iso (__main__.Tests.test_iso) ... ok
+test_revision_gate (__main__.Tests.test_revision_gate) ... ok
+test_sfo (__main__.Tests.test_sfo) ... ok
+test_truncated (__main__.Tests.test_truncated) ... ok
+test_wrong_format (__main__.Tests.test_wrong_format) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.002s
+
+OK

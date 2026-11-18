@@ -1,0 +1,148 @@
+// Bulletproof optional build-local AOT bridge for PPSSPP 1.20.4. GPL-2.0-or-later.
+// Included in ReplaceTables.cpp; uses the runtime's existing replacement dispatcher,
+// guest memory functions and cycle accounting. No binary edits to a host executable.
+#include "bp_abi.h"
+#include "Core/ELF/ParamSFO.h"
+#include "Core/MIPS/MIPSTables.h"
+#include "Core/HW/Display.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <filesystem>
+#include <vector>
+#if defined(_WIN32)
+#include "Common/CommonWindows.h"
+#else
+#include <dlfcn.h>
+#endif
+static bool WriteReplaceInstruction(u32 address, int index);
+namespace BPAot {
+struct Slot { ReplacementTableEntry entry{}; u32 addr = 0; int cycles = 0; uint64_t hits = 0; bool bad = false; };
+static std::vector<Slot> slots;
+static const BP_Leaf *leaves;
+static BP_Link linkfn;
+static FILE *report;
+static uint64_t total, guestOps, matched, distinct, audits, mismatches, badMemory;
+static bool auditFirst, shadow;
+static u32 imageBase; static std::vector<int> atPC;
+static uint64_t spanCalls,spanOps;
+static u32 shadowRegs[32];
+// Audited leaves execute against shadow GPRs and a byte-granular write overlay.
+// Their first real call is independently interpreted before committing the result.
+static std::map<u32,u8> writes;
+static u32 key(u32 addr) { return addr & 0x3fffffffu; }
+static bool valid(u32 addr,unsigned width) {
+    if ((addr & (width-1)) || !Memory::IsValidRange(addr,width)) { ++badMemory; return false; }
+    return true;
+}
+static u32 read(u32 addr,unsigned width) {
+    if (!valid(addr,width)) return 0;
+    u32 v = width==1 ? Memory::Read_U8(addr) : width==2 ? Memory::Read_U16(addr) : Memory::Read_U32(addr);
+    if (shadow) for (unsigned j=0;j<width;j++) {
+        auto it=writes.find(key(addr+j)); if(it!=writes.end()) v=(v&~(255u<<(j*8)))|((u32)it->second<<(j*8));
+    }
+    return v;
+}
+static void write(u32 addr,u32 v,unsigned width) {
+    if (!valid(addr,width)) return;
+    if(shadow) { for(unsigned j=0;j<width;j++) writes[key(addr+j)]=(u8)(v>>(8*j)); return; }
+    if(width==1) Memory::Write_U8((u8)v,addr); else if(width==2) Memory::Write_U16((u16)v,addr); else Memory::Write_U32(v,addr);
+}
+static void stats(const char *label) {
+    if (!report) return;
+    fprintf(report,"%s matched=%llu calls=%llu distinct=%llu guest_instructions=%llu audited=%llu mismatches=%llu invalid_accesses=%llu span_calls=%llu span_instructions=%llu vblanks=%d flips=%d\n",label,
+      (unsigned long long)matched,(unsigned long long)total,(unsigned long long)distinct,(unsigned long long)guestOps,
+      (unsigned long long)audits,(unsigned long long)mismatches,(unsigned long long)badMemory,(unsigned long long)spanCalls,(unsigned long long)spanOps,__DisplayGetNumVblanks(),__DisplayGetFlipCount()); fflush(report);
+}
+static u32 *begin(u32 i) {
+    Slot &s=slots[i]; shadow=(auditFirst && !s.hits) || s.bad;
+    if (!s.hits++) ++distinct;
+    ++total; guestOps+=leaves[i].count; if(leaves[i].kind==1) { ++spanCalls; spanOps+=leaves[i].count; }
+    if (shadow) { writes.clear(); memcpy(shadowRegs,currentMIPS->r,sizeof(shadowRegs)); return shadowRegs; }
+    return currentMIPS->r;
+}
+static int finish(u32 i) {
+    auto &s=slots[i]; const auto &d=leaves[i];
+    if(shadow) {
+        shadow=false; const u32 savedPC=currentMIPS->pc;
+        for(u32 j=0;j<d.count;j++) if(d.kind==1 || j!=d.count-2) { currentMIPS->pc=s.addr+4*j; MIPSInterpret(MIPSOpcode(d.words[j])); }
+        currentMIPS->pc=savedPC;
+        bool ok=!memcmp(shadowRegs,currentMIPS->r,sizeof(shadowRegs));
+        for(const auto &w:writes) if(Memory::Read_U8(w.first)!=w.second) ok=false;
+        ++audits;
+        if(!ok) { if(!s.bad && report) fprintf(report,"quarantined leaf offset=0x%08x\n",d.offset); s.bad=true; ++mismatches; }
+    }
+    if (!(total & (total-1)) || !(total % 4000000)) stats("sample");
+    return d.kind==1 ? 0 : s.cycles;
+}
+static const BP_Host api={BP_ABI,begin,finish,read,write};
+static void closeSession() {
+    stats("stop"); if(report) { fclose(report); report=nullptr; }
+    spanCalls=spanOps=total=guestOps=matched=distinct=audits=mismatches=badMemory=0; atPC.clear(); imageBase=0; slots.clear(); leaves=nullptr; shadow=false;
+}
+static const ReplacementTableEntry *lookup(size_t n) {
+    return n<slots.size() && slots[n].addr ? &slots[n].entry : nullptr;
+}
+static void install(u32 bootEntry,const char *moduleName) {
+    if(strcmp(moduleName,"Engine") || g_paramSFO.GetDiscID()!="ULUS10128" || g_paramSFO.GetValueString("DISC_VERSION")!="1.02" || bootEntry<0x9e61cu) return;
+#if defined(_WIN32)
+    auto fn=_wgetenv(L"BP_AOT_PATH"); auto lf=_wgetenv(L"BP_AOT_LOG");
+#else
+    auto fn=getenv("BP_AOT_PATH"); auto lf=getenv("BP_AOT_LOG");
+#endif
+    if(!fn || !*fn || !std::filesystem::path(fn).is_absolute()) return;
+    if (!linkfn) {
+#if defined(_WIN32)
+        HMODULE lib=LoadLibraryW(fn); if(lib) linkfn=(BP_Link)GetProcAddress(lib,"bp_link_v2");
+#else
+        void *lib=dlopen(fn,RTLD_NOW|RTLD_LOCAL); if(lib) linkfn=(BP_Link)dlsym(lib,"bp_link_v2");
+#endif
+    }
+    bool fresh=slots.empty();
+    if(fresh && lf && *lf) {
+#if defined(_WIN32)
+        report=_wfopen(lf,L"a");
+#else
+        report=fopen(lf,"a");
+#endif
+    }
+    if(!linkfn) { if(report) {fprintf(report,"ERROR: local native module did not link\n");fflush(report);} return; }
+    uint32_t n=0; leaves=linkfn(&api,&n); if(!leaves || !n || n>BP_CAP) return;
+    if(fresh) {slots.resize(n);auditFirst=getenv("BP_AOT_AUDIT") && !strcmp(getenv("BP_AOT_AUDIT"),"1");}
+    if(n!=slots.size()) return;
+    const u32 base=bootEntry-0x9e61cu; u32 installed=0, whole=0, spans=0;
+    imageBase=base; atPC.assign(796348/4,-1);
+    for(u32 i=0;i<n;i++) {
+        const auto &d=leaves[i]; if(!d.run || !d.words || d.count<2 || d.count>64 || d.offset>796348-4*d.count || (d.offset&3)) continue;
+        u32 addr=base+d.offset; if(!Memory::IsValidRange(addr,4*d.count)) continue;
+        bool ok=true; int cycles=0;
+        for(u32 j=0;j<d.count;j++) {
+            MIPSOpcode op=Memory::Read_Instruction(addr+4*j,true);
+            if(op.encoding!=d.words[j]) { ok=false; break; }
+            cycles+=MIPSGetInstructionCycleEstimate(op);
+        }
+        if(!ok || d.kind>1 || (!d.kind && d.words[d.count-2]!=0x03e00008u)) continue;
+        // Never replace a different host service or title. The entire body must match.
+        u32 raw=Memory::Read_Opcode_JIT(addr).encoding;
+        const int idx=(int)ARRAY_SIZE(entries)+(int)i;
+        if(MIPS_IS_REPLACEMENT(raw) && raw!=(MIPS_EMUHACK_CALL_REPLACEMENT|(u32)idx)) continue;
+        Slot &s=slots[i];s.entry={"local Engine AOT",d.run,nullptr,0,0}; s.addr=addr; s.cycles=std::max(1,cycles);
+        if(d.kind==0) { WriteReplaceInstruction(addr,idx); ++whole; } else { atPC[d.offset/4]=(int)i; ++spans; } ++installed;
+    }
+    matched=installed;
+    if(report) {fprintf(report,"%s disc=ULUS10128 revision=1.02 Engine_base=0x%08x selected=%u exact=%u whole=%u spans=%u audit_first=%d\n",fresh?"attach":"reattach",base,n,installed,whole,spans,(int)auditFirst); fflush(report);}
+}
+}
+void BPInstallAOT(u32 entry,const char *name) { BPAot::install(entry,name); }
+
+// Called while the IR frontend is compiling a basic block, NOT on each tick.
+// If a replacement, breakpoint, or a guest write changed any word, decline it.
+int BPFindSpan(u32 pc, int &size, int &cycles) {
+    using namespace BPAot;
+    u32 off=pc-imageBase;
+    if((off&3) || off/4>=atPC.size()) return -1;
+    int i=atPC[off/4]; if(i<0) return -1;
+    const auto &d=leaves[i];
+    for(u32 j=0;j<d.count;j++) if(Memory::Read_Instruction(pc+4*j,false).encoding!=d.words[j]) return -1;
+    size=(int)d.count; cycles=slots[i].cycles; return (int)ARRAY_SIZE(entries)+i;
+}

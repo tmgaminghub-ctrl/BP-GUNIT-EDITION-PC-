@@ -1,0 +1,40 @@
+Notice and license fields in the included upstream font files:
+
+Inconsolata-Regular.ttf
+Copyright 2006 The Inconsolata Project Authors (https://github.com/cyrealtype/Inconsolata)
+Raph Levien, Cyreal, Google
+Raph Levien, Cyreal, Brenton Simpson
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: http://scripts.sil.org/OFL
+http://scripts.sil.org/OFL
+
+Roboto_Condensed-Bold.ttf
+Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic)
+Roboto is a trademark of Google.
+Google
+Christian Robertson
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+https://openfontlicense.org
+
+Roboto_Condensed-Italic.ttf
+Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic)
+Roboto is a trademark of Google.
+Google
+Christian Robertson
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+https://openfontlicense.org
+
+Roboto_Condensed-Light.ttf
+Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic)
+Roboto is a trademark of Google.
+Google
+Christian Robertson
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+https://openfontlicense.org
+
+Roboto_Condensed-Regular.ttf
+Copyright 2011 The Roboto Project Authors (https://github.com/googlefonts/roboto-classic)
+Roboto is a trademark of Google.
+Google
+Christian Robertson
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at: https://openfontlicense.org
+https://openfontlicense.org

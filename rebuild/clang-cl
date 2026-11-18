@@ -1,0 +1,2 @@
+#!/bin/sh
+R="$BP_ROOT/winsdk"; exec /usr/lib/llvm-19/bin/clang --driver-mode=cl /clang:-ivfsoverlay /clang:"$BP_ROOT/win-llvm/sdk.json" /clang:-Wno-nonportable-include-path /imsvc"$R/crt/include" /imsvc"$R/sdk/include/ucrt" /imsvc"$R/sdk/include/shared" /imsvc"$R/sdk/include/um" /imsvc"$R/sdk/include/winrt" "$@"

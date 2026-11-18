@@ -1,0 +1,16 @@
+{
+  "linux-game": {
+    "device_format": "48000 Hz signed 16-bit stereo",
+    "sample_frames": 144060,
+    "nonzero_individual_samples": 283499,
+    "peak_absolute_sample": 24400,
+    "rms": 4185.31
+  },
+  "win-game": {
+    "device_format": "48000 Hz signed 16-bit stereo",
+    "sample_frames": 143896,
+    "nonzero_individual_samples": 287733,
+    "peak_absolute_sample": 16323,
+    "rms": 4142.89
+  }
+}

@@ -1,0 +1,9 @@
+test_cc_partition (__main__.TestLauncher.test_cc_partition) ... ok
+test_merge_cpu (__main__.TestLauncher.test_merge_cpu) ... ok
+test_missing_cpu_key (__main__.TestLauncher.test_missing_cpu_key) ... ok
+test_missing_cpu_section (__main__.TestLauncher.test_missing_cpu_section) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.002s
+
+OK

@@ -1,0 +1,55 @@
+50 CENT: BULLETPROOF - G-UNIT EDITION  |  PC CAMPAIGN PLAYER
+=============================================================
+Unofficial x64 Windows / Linux hybrid player with its own launcher.
+No game is included. You need your own complete USA PSP disc image:
+ULUS10128, version 1.02, as .iso or CISO v1 .cso. It is opened read-only.
+
+1. Extract the ENTIRE zip to a writable folder. Don't run it from inside the zip.
+2. Windows: open "Play Bulletproof.exe". The campaign launcher opens; it uses the
+   included Python and compilers, so there is nothing else to install.
+   Linux: in the extracted folder run
+       sh './Play on Linux.sh'
+   and install what README.md lists (python3-tk, tcc, SDL2, OpenGL driver...).
+3. In the launcher: "Choose disc image...", pick your image, say yes to
+   "Verify entire disc" (read-only, a few minutes the first time).
+   The launcher then remembers the disc and shows "Complete disc verified".
+4. Press PLAY CAMPAIGN. The first run compiles part of the game engine from
+   your disc (short wait, local cache); later runs start immediately.
+5. The game window opens. Press Z at the autosave notice, Space at the title,
+   then New Game (Play Tutorial or Skip Tutorial), a difficulty, and a save
+   slot. Move with I / J / K / L. Space opens the in-game pause/phone menu.
+
+PLAYING ON, AND SAVES
+  Each launch: the launcher backs up your game saves to Play-Data/Backups/,
+  then PLAY CAMPAIGN. Inside the game choose Load Game, pick the slot, press X
+  after "Load completed", then Resume Game. The launcher's "Checkpoints" list
+  shows the saves the game itself wrote, with its own descriptions.
+  Save states made in the player (Esc > Save state) appear under
+  "Resume snapshot" - those are exact snapshots, not game saves.
+
+DISPLAY
+  The launcher's DISPLAY row sets window size (960x544 up to 4K), render scale
+  (1x = native 480x272, 2x default, up to 5x) and vsync, and it is applied at
+  the next launch. Full screen uses your desktop resolution. Everything else
+  (aspect, filtering, frameskip, shaders) is in the in-game Esc > Settings.
+
+CONTROLS
+  Z = Cross (accept)   X = Circle (back)   Arrows = d-pad / menus
+  I/J/K/L = move       Space = pause/phone  V = Select
+  Esc = PC runtime menu (remap keys, settings, exit)
+
+ABOUT "THE FULL GAME"
+  The launcher verifies the whole disc - every sector, file, level, movie and
+  audio bank - against the original USA v1.02 image, and the player boots the
+  unmodified retail story campaign. Tutorial, the first story mission, and a
+  finished-campaign (late "Endgame") checkpoint were observed running with
+  zero native-code differences. A continuous start-to-credits playthrough was
+  not recorded; guide/CAMPAIGN.md says exactly what was and wasn't shown, and
+  how to reach a late level yourself in minutes.
+  This is NOT an emulator-free port: the engine is partly recompiled locally,
+  while the PSP runtime still runs the rest and supplies graphics, sound, input
+  and saves. guide/UPSTREAM.md explains what a true standalone build requires.
+
+If something goes wrong: README.md > Troubleshooting, and keep the session log
+from Play-Data/logs/. This kit is not affiliated with the game's publishers,
+artists, Sony or the PPSSPP team. Licenses: THIRD-PARTY.md.
